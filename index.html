@@ -1,0 +1,797 @@
+<title>PDF 字型急診室</title>
+<style>
+  :root{
+    --ink:#16212c;
+    --ink-soft:#4c5b68;
+    --ground:#eef1f3;
+    --surface:#ffffff;
+    --surface-2:#e3e9ec;
+    --border:#c9d2d8;
+    --accent:#0d7a8c;
+    --accent-ink:#ffffff;
+    --accent-soft:#d9eef1;
+    --warn:#a85a12;
+    --warn-soft:#f7e6d2;
+    --danger:#ae2c22;
+    --danger-soft:#f6dcda;
+    --good:#1f7a4d;
+    --good-soft:#dcf0e3;
+    --shadow:0 1px 2px rgba(20,30,38,.06), 0 8px 24px -12px rgba(20,30,38,.18);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e7edf1;
+      --ink-soft:#9fb0ba;
+      --ground:#0d1418;
+      --surface:#141e24;
+      --surface-2:#1b262d;
+      --border:#28353d;
+      --accent:#3fc7da;
+      --accent-ink:#06232a;
+      --accent-soft:#12333b;
+      --warn:#f0a15a;
+      --warn-soft:#2f2313;
+      --danger:#f0776c;
+      --danger-soft:#331815;
+      --good:#54d59a;
+      --good-soft:#0f2a1f;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#e7edf1;
+    --ink-soft:#9fb0ba;
+    --ground:#0d1418;
+    --surface:#141e24;
+    --surface-2:#1b262d;
+    --border:#28353d;
+    --accent:#3fc7da;
+    --accent-ink:#06232a;
+    --accent-soft:#12333b;
+    --warn:#f0a15a;
+    --warn-soft:#2f2313;
+    --danger:#f0776c;
+    --danger-soft:#331815;
+    --good:#54d59a;
+    --good-soft:#0f2a1f;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:'IBM Plex Sans','PingFang TC','Microsoft JhengHei','Noto Sans TC',-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.55;
+  }
+  .num{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 64px;display:flex;flex-direction:column;gap:22px;}
+
+  header.hero{
+    position:relative;
+    padding:26px 24px 24px;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:
+      repeating-linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, transparent) 0px, color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px, transparent 7px),
+      var(--surface);
+    overflow:hidden;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:12px;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  h1{font-size:26px;margin:0 0 10px;letter-spacing:-.01em;text-wrap:balance;}
+  header.hero p{margin:0;color:var(--ink-soft);font-size:14.5px;max-width:56ch;}
+
+  .card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:var(--surface);
+    box-shadow:var(--shadow);
+    padding:22px 24px;
+  }
+  .card[hidden]{display:none!important;}
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .card-head h2{font-size:15px;margin:0;font-weight:600;}
+  .card-head .step{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .card-sub{font-size:13px;color:var(--ink-soft);margin:-8px 0 16px;}
+
+  /* dropzone */
+  .dropzone{
+    border:1.5px dashed var(--border);
+    border-radius:calc(var(--radius) - 4px);
+    padding:32px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    background:var(--ground);
+  }
+  .dropzone:hover, .dropzone:focus-visible{border-color:var(--accent); background:var(--accent-soft);}
+  .dropzone.drag{border-color:var(--accent); background:var(--accent-soft);}
+  .dropzone svg{color:var(--accent);}
+  .dropzone .dz-title{font-weight:600;margin:10px 0 4px;font-size:14.5px;}
+  .dropzone .dz-sub{font-size:12.5px;color:var(--ink-soft);}
+  input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;}
+
+  .filechip{
+    display:flex;align-items:center;gap:12px;
+    border:1px solid var(--border);border-radius:10px;
+    padding:12px 14px;background:var(--ground);
+  }
+  .filechip .fc-icon{flex:none;width:34px;height:34px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;}
+  .filechip .fc-meta{flex:1;min-width:0;}
+  .filechip .fc-name{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .filechip .fc-size{font-size:12px;color:var(--ink-soft);}
+  .linklike{background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit;}
+  .linklike:hover{text-decoration:underline;}
+
+  /* stats */
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .stat-tile{border:1px solid var(--border);border-radius:10px;padding:13px 14px;background:var(--ground);}
+  .stat-tile .st-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;}
+  .stat-tile .st-value{font-size:22px;font-weight:600;}
+  .stat-tile.warn{background:var(--danger-soft);border-color:color-mix(in srgb, var(--danger) 35%, var(--border));}
+  .stat-tile.warn .st-value{color:var(--danger);}
+  .stat-tile.good{background:var(--good-soft);border-color:color-mix(in srgb, var(--good) 35%, var(--border));}
+  .stat-tile.good .st-value{color:var(--good);}
+
+  .comp-label{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .comp-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:18px;border:1px solid var(--border);}
+  .comp-bar .seg-type3{background:var(--danger);}
+  .comp-bar .seg-other{background:var(--accent);}
+
+  .font-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .font-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);font-weight:600;padding:0 10px 8px;border-bottom:1px solid var(--border);}
+  .font-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+  .font-table tr:last-child td{border-bottom:none;}
+  .font-table td.fname{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;}
+  .badge.ok{background:var(--accent-soft);color:var(--accent);}
+  .badge.bad{background:var(--danger-soft);color:var(--danger);}
+  details.font-details{margin-top:14px;}
+  details.font-details summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent);list-style:none;}
+  details.font-details summary::-webkit-details-marker{display:none;}
+  details.font-details summary::before{content:"▸ ";}
+  details.font-details[open] summary::before{content:"▾ ";}
+  details.font-details .table-wrap{margin-top:10px;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:10px;}
+  details.font-details .table-wrap .font-table{margin:0;}
+  details.font-details .table-wrap th{position:sticky;top:0;background:var(--surface);}
+
+  .note{
+    display:flex;gap:10px;
+    border:1px solid var(--border);
+    background:var(--ground);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:12.5px;color:var(--ink-soft);
+  }
+  .note svg{flex:none;margin-top:1px;color:var(--ink-soft);}
+  .note.warn{background:var(--warn-soft); border-color:color-mix(in srgb, var(--warn) 35%, var(--border)); color:color-mix(in srgb, var(--warn) 70%, var(--ink));}
+  .note.warn svg{color:var(--warn);}
+
+  .thumb-block{margin-top:16px;}
+  .thumb-block .tb-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;}
+  .thumb-frame{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;min-height:80px;}
+  .thumb-frame img{display:block;max-width:100%;height:auto;}
+
+  /* pills */
+  .field-label{font-size:12.5px;font-weight:600;margin:0 0 8px;}
+  .pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .pill{
+    border:1px solid var(--border);background:var(--ground);color:var(--ink);
+    padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;
+    font-family:inherit;
+  }
+  .pill .pill-sub{display:block;font-size:10.5px;font-weight:500;color:var(--ink-soft);}
+  .pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .pill.active .pill-sub{color:color-mix(in srgb, var(--accent-ink) 75%, transparent);}
+
+  .qslider{display:flex;align-items:center;gap:12px;margin:-6px 0 16px;}
+  .qslider input[type=range]{flex:1;accent-color:var(--accent);}
+  .qslider .qval{font-size:13px;width:48px;text-align:right;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:9px;padding:11px 20px;font-size:14px;font-weight:600;
+    border:1px solid var(--border);background:var(--surface);color:var(--ink);
+    cursor:pointer;font-family:inherit;
+  }
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);width:100%;}
+  .btn-primary:hover:not(:disabled){filter:brightness(1.05);}
+  .btn:focus-visible, .pill:focus-visible, .dropzone:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .progress-wrap{margin-top:16px;}
+  .progress{height:8px;border-radius:6px;background:var(--surface-2);overflow:hidden;border:1px solid var(--border);}
+  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .15s;}
+  .progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:7px;}
+
+  .result-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+  .result-stats .rs-tile{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--ground);}
+  .result-stats .rs-label{font-size:11px;color:var(--ink-soft);margin-bottom:5px;}
+  .result-stats .rs-value{font-size:17px;font-weight:600;}
+  .result-delta{font-size:12px;color:var(--ink-soft);margin-bottom:16px;}
+  .result-delta strong{font-weight:600;}
+  .thumb-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+  .actions{display:flex;flex-direction:column;gap:10px;}
+  .actions .linklike{align-self:center;}
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    background:var(--ink);color:var(--ground);
+    padding:10px 16px;border-radius:9px;font-size:13px;
+    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+    z-index:50;max-width:80vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+  footer.note{font-size:11.5px;justify-content:center;text-align:center;}
+
+  @media (max-width:520px){
+    .stat-row{grid-template-columns:1fr 1fr;}
+    .stat-row .stat-tile:last-child{grid-column:1 / -1;}
+    .result-stats{grid-template-columns:1fr;}
+    .thumb-row{grid-template-columns:1fr;}
+    h1{font-size:22px;}
+  }
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">純前端 · 檔案不上傳</div>
+    <h1>PDF 字型急診室</h1>
+  </header>
+
+  <section class="card" id="cardUpload">
+    <div class="card-head">
+      <h2>選擇 PDF</h2>
+      <span class="step">STEP 1</span>
+    </div>
+
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="選擇或拖曳 PDF 檔案">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M12 4l-4 4M12 4l4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      <div class="dz-title">拖曳 PDF 到這裡,或點擊選擇檔案</div>
+      <div class="dz-sub">支援任意大小 · 僅限 .pdf</div>
+      <input type="file" id="fileInput" accept="application/pdf,.pdf">
+    </div>
+
+    <div id="fileChip" class="filechip" hidden style="margin-top:14px;">
+      <div class="fc-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      </div>
+      <div class="fc-meta">
+        <div class="fc-name" id="fcName">—</div>
+        <div class="fc-size num" id="fcSize">—</div>
+      </div>
+      <button class="linklike" id="btnReselect">重新選擇</button>
+    </div>
+  </section>
+
+  <section class="card" id="cardDiag" hidden>
+    <div class="card-head">
+      <h2>字型診斷報告</h2>
+      <span class="step">診斷結果</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-tile"><div class="st-label">總頁數</div><div class="st-value num" id="statPages">–</div></div>
+      <div class="stat-tile"><div class="st-label">字型總數</div><div class="st-value num" id="statFonts">–</div></div>
+      <div class="stat-tile" id="statT3Tile"><div class="st-label">Type&nbsp;3 字型數</div><div class="st-value num" id="statT3">–</div></div>
+    </div>
+
+    <div id="compWrap">
+      <div class="comp-label"><span>字型組成</span><span id="compLabelRight"></span></div>
+      <div class="comp-bar"><div class="seg-type3" id="segType3" style="width:0%"></div><div class="seg-other" id="segOther" style="width:100%"></div></div>
+    </div>
+
+    <div class="note" id="diagNote">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span id="diagNoteText">分析中…</span>
+    </div>
+
+    <details class="font-details">
+      <summary>顯示完整字型清單</summary>
+      <div class="table-wrap">
+        <table class="font-table">
+          <thead><tr><th>字型名稱</th><th>類型</th><th>狀態</th></tr></thead>
+          <tbody id="fontTableBody"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <div class="thumb-block" id="beforeThumbBlock" hidden>
+      <div class="tb-label">第 1 頁預覽(原始)</div>
+      <div class="thumb-frame"><img id="beforeThumbImg" alt="原始 PDF 第一頁預覽"></div>
+    </div>
+  </section>
+
+  <section class="card" id="cardBuild" hidden>
+    <div class="card-head">
+      <h2>點陣化重建</h2>
+      <span class="step">STEP 2</span>
+    </div>
+    <p class="card-sub">把每一頁重新繪製成一張高解析度點陣圖,再包裝回 PDF——徹底繞開破碎字型的即時運算問題。</p>
+
+    <div class="note warn" style="margin-bottom:18px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a1 1 0 0 0 .9 1.5h18.6a1 1 0 0 0 .9-1.5L13.7 3.9a1 1 0 0 0-1.7 0Z"/><path d="M12 9v4M12 16.5h.01"/></svg>
+      <span>重建後,頁面文字會變成圖片:<strong>無法反白、複製或搜尋文字</strong>,但列印與外觀不受影響。建議保留原始檔案備份。</span>
+    </div>
+
+    <div id="pageCountNote" class="note" hidden style="margin-bottom:18px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span id="pageCountNoteText"></span>
+    </div>
+
+    <p class="field-label">輸出解析度</p>
+    <div class="pill-group" id="dpiGroup">
+      <button class="pill" data-dpi="150">150<span class="pill-sub">螢幕閱讀</span></button>
+      <button class="pill active" data-dpi="200">200<span class="pill-sub">建議</span></button>
+      <button class="pill" data-dpi="300">300<span class="pill-sub">列印品質</span></button>
+      <button class="pill" data-dpi="400">400<span class="pill-sub">最高精細</span></button>
+    </div>
+
+    <p class="field-label">影像格式</p>
+    <div class="pill-group" id="formatGroup">
+      <button class="pill active" data-format="png">PNG<span class="pill-sub">無損,檔案較大</span></button>
+      <button class="pill" data-format="jpeg">JPEG<span class="pill-sub">檔案較小</span></button>
+    </div>
+
+    <div class="qslider" id="qualityRow" hidden>
+      <span class="field-label" style="margin:0;">JPEG 品質</span>
+      <input type="range" id="qualityRange" min="60" max="100" step="5" value="90">
+      <span class="qval num" id="qualityVal">90</span>
+    </div>
+
+    <button class="btn btn-primary" id="btnBuild">開始重建</button>
+
+    <div class="progress-wrap" id="progressWrap" hidden>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text"><span id="progressLabel">準備中…</span><span class="num" id="progressPct">0%</span></div>
+    </div>
+  </section>
+
+  <section class="card" id="cardResult" hidden>
+    <div class="card-head">
+      <h2>完成</h2>
+      <span class="step">結果</span>
+    </div>
+
+    <div class="result-stats">
+      <div class="rs-tile"><div class="rs-label">原始檔案大小</div><div class="rs-value num" id="rsBefore">–</div></div>
+      <div class="rs-tile"><div class="rs-label">重建後檔案大小</div><div class="rs-value num" id="rsAfter">–</div></div>
+    </div>
+    <div class="result-delta" id="rsDelta"></div>
+
+    <div class="thumb-row">
+      <div class="thumb-block">
+        <div class="tb-label">原始</div>
+        <div class="thumb-frame"><img id="afterThumbBefore" alt="原始 PDF 第一頁預覽"></div>
+      </div>
+      <div class="thumb-block">
+        <div class="tb-label">重建後</div>
+        <div class="thumb-frame"><img id="afterThumbAfter" alt="重建後 PDF 第一頁預覽"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btnDownload">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+        下載重建後的 PDF
+      </button>
+      <button class="linklike" id="btnReset">處理下一份文件</button>
+    </div>
+  </section>
+
+  <footer class="note">
+    <span>此工具完全在瀏覽器端執行,不會將檔案傳送到任何伺服器。頁數較多的文件建議先用較低解析度測試。</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  var state = {
+    fileName: "",
+    originalBytes: null,
+    originalSize: 0,
+    pageCount: 0,
+    fonts: [],
+    type3Count: 0,
+    dpi: 200,
+    format: "png",
+    jpegQuality: 90,
+    outputBytes: null
+  };
+
+  var el = {};
+  ["dropzone","fileInput","fileChip","fcName","fcSize","btnReselect",
+   "cardUpload","cardDiag","cardBuild","cardResult",
+   "statPages","statFonts","statT3","statT3Tile",
+   "compWrap","segType3","segOther","compLabelRight",
+   "diagNote","diagNoteText","fontTableBody",
+   "beforeThumbBlock","beforeThumbImg",
+   "pageCountNote","pageCountNoteText",
+   "dpiGroup","formatGroup","qualityRow","qualityRange","qualityVal",
+   "btnBuild","progressWrap","progressFill","progressLabel","progressPct",
+   "rsBefore","rsAfter","rsDelta","afterThumbBefore","afterThumbAfter",
+   "btnDownload","btnReset","toast"
+  ].forEach(function(id){ el[id] = document.getElementById(id); });
+
+  function formatBytes(bytes){
+    if (!bytes && bytes !== 0) return "–";
+    var units = ["B","KB","MB","GB"];
+    var i = 0; var v = bytes;
+    while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+    return (i === 0 ? v.toFixed(0) : v.toFixed(2)) + " " + units[i];
+  }
+
+  function cleanFontName(name){
+    if (!name) return "(未命名字型)";
+    name = name.replace(/^\//, "");
+    name = name.replace(/^[A-Z]{6}\+/, "");
+    return name || "(未命名字型)";
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.toast.classList.remove("show"); }, 3200);
+  }
+
+  function resetAll(){
+    state = { fileName:"", originalBytes:null, originalSize:0, pageCount:0, fonts:[], type3Count:0,
+      dpi:200, format:"png", jpegQuality:90, outputBytes:null };
+    el.fileInput.value = "";
+    el.fileChip.hidden = true;
+    el.dropzone.hidden = false;
+    el.cardDiag.hidden = true;
+    el.cardBuild.hidden = true;
+    el.cardResult.hidden = true;
+    el.beforeThumbBlock.hidden = true;
+    el.progressWrap.hidden = true;
+    el.btnBuild.disabled = false;
+    el.btnBuild.textContent = "開始重建";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /* ---------- upload ---------- */
+
+  el.dropzone.addEventListener("click", function(){ el.fileInput.click(); });
+  el.dropzone.addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.fileInput.click(); }
+  });
+  ["dragenter","dragover"].forEach(function(evt){
+    el.dropzone.addEventListener(evt, function(e){ e.preventDefault(); el.dropzone.classList.add("drag"); });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    el.dropzone.addEventListener(evt, function(e){ e.preventDefault(); el.dropzone.classList.remove("drag"); });
+  });
+  el.dropzone.addEventListener("drop", function(e){
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  el.fileInput.addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0];
+    if (f) handleFile(f);
+  });
+  el.btnReselect.addEventListener("click", function(){ resetAll(); });
+  el.btnReset.addEventListener("click", function(){ resetAll(); });
+
+  function handleFile(file){
+    if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) {
+      showToast("請選擇 PDF 檔案");
+      return;
+    }
+    state.fileName = file.name;
+    var reader = new FileReader();
+    reader.onload = function(){
+      state.originalBytes = reader.result;
+      state.originalSize = reader.result.byteLength;
+      el.fcName.textContent = file.name;
+      el.fcSize.textContent = formatBytes(state.originalSize);
+      el.dropzone.hidden = true;
+      el.fileChip.hidden = false;
+      el.cardBuild.hidden = true;
+      el.cardResult.hidden = true;
+      runDiagnosis();
+    };
+    reader.onerror = function(){ showToast("讀取檔案失敗"); };
+    reader.readAsArrayBuffer(file);
+  }
+
+  /* ---------- diagnosis ---------- */
+
+  function runDiagnosis(){
+    el.cardDiag.hidden = false;
+    el.diagNoteText.textContent = "正在解析檔案結構與字型清單…";
+    el.statPages.textContent = "–";
+    el.statFonts.textContent = "–";
+    el.statT3.textContent = "–";
+    el.fontTableBody.innerHTML = "";
+    el.beforeThumbBlock.hidden = true;
+
+    Promise.resolve().then(function(){
+      return PDFLib.PDFDocument.load(state.originalBytes.slice(0), { ignoreEncryption: true, updateMetadata: false, throwOnInvalidObject: false });
+    }).then(function(pdfDoc){
+      var pageCount = pdfDoc.getPageCount();
+      var fonts = [];
+      var seen = {};
+      var objs = pdfDoc.context.enumerateIndirectObjects();
+      for (var i = 0; i < objs.length; i++) {
+        var ref = objs[i][0];
+        var obj = objs[i][1];
+        if (!(obj instanceof PDFLib.PDFDict)) continue;
+        var typeName = obj.get(PDFLib.PDFName.of("Type"));
+        if (!typeName || typeName.toString() !== "/Font") continue;
+        var key = ref.toString();
+        if (seen[key]) continue;
+        seen[key] = true;
+        var subtypeObj = obj.get(PDFLib.PDFName.of("Subtype"));
+        var baseFontObj = obj.get(PDFLib.PDFName.of("BaseFont")) || obj.get(PDFLib.PDFName.of("Name"));
+        var subtype = subtypeObj ? subtypeObj.toString().replace(/^\//, "") : "未知";
+        fonts.push({ subtype: subtype, name: cleanFontName(baseFontObj ? baseFontObj.toString() : "") });
+      }
+
+      state.pageCount = pageCount;
+      state.fonts = fonts;
+      state.type3Count = fonts.filter(function(f){ return f.subtype === "Type3"; }).length;
+
+      renderDiagnosis();
+      el.cardBuild.hidden = false;
+
+      if (pageCount > 150) {
+        el.pageCountNote.hidden = false;
+        el.pageCountNoteText.textContent = "此文件共 " + pageCount + " 頁,重建可能需要一些時間與記憶體,建議先嘗試較低的解析度。";
+      } else {
+        el.pageCountNote.hidden = true;
+      }
+
+      renderBeforeThumb();
+    }).catch(function(err){
+      console.error(err);
+      el.diagNote.classList.add("warn");
+      el.diagNoteText.textContent = "無法解析此 PDF(可能已加密或檔案損毀):" + (err && err.message ? err.message : "未知錯誤") + "。仍可嘗試直接進行點陣化重建。";
+      el.statPages.textContent = "?";
+      el.statFonts.textContent = "?";
+      el.statT3.textContent = "?";
+      el.cardBuild.hidden = false;
+    });
+  }
+
+  function renderDiagnosis(){
+    el.statPages.textContent = state.pageCount;
+    el.statFonts.textContent = state.fonts.length;
+    el.statT3.textContent = state.type3Count;
+
+    el.statT3Tile.classList.remove("warn","good");
+    el.diagNote.classList.remove("warn");
+
+    if (state.type3Count > 0) {
+      el.statT3Tile.classList.add("warn");
+      el.diagNoteText.textContent = "Type 3 字型不是一般的向量外框字,而是用一連串繪圖指令「畫」出每個字。閱讀器必須即時運算每一筆畫,字數與頁數一多,就會出現開啟卡頓、縮放模糊、甚至顯示錯誤的狀況——常見於部分掃描轉檔或舊版排版軟體輸出的中文 PDF。建議往下進行點陣化重建。";
+    } else if (state.fonts.length > 0) {
+      el.statT3Tile.classList.add("good");
+      el.diagNoteText.textContent = "沒有偵測到 Type 3 字型,效能問題較可能來自其他原因(例如內嵌了大量高解析度圖片)。仍可以繼續下方的點陣化,但效果可能不明顯。";
+    } else {
+      el.diagNoteText.textContent = "此文件未偵測到任何內嵌字型定義(可能整份都是圖片或掃描檔)。";
+    }
+
+    if (state.fonts.length > 0) {
+      var t3pct = Math.round((state.type3Count / state.fonts.length) * 100);
+      el.segType3.style.width = t3pct + "%";
+      el.segOther.style.width = (100 - t3pct) + "%";
+      el.compLabelRight.textContent = "Type 3 " + state.type3Count + " / 共 " + state.fonts.length + " 個字型";
+      el.compWrap.hidden = false;
+    } else {
+      el.compWrap.hidden = true;
+    }
+
+    el.fontTableBody.innerHTML = "";
+    state.fonts.forEach(function(f){
+      var tr = document.createElement("tr");
+      var isBad = f.subtype === "Type3";
+      tr.innerHTML =
+        '<td class="fname">' + escapeHtml(f.name) + '</td>' +
+        '<td>' + escapeHtml(f.subtype) + '</td>' +
+        '<td><span class="badge ' + (isBad ? "bad" : "ok") + '">' + (isBad ? "建議重建" : "正常") + '</span></td>';
+      el.fontTableBody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  function renderBeforeThumb(){
+    renderThumbnailDataUrl(state.originalBytes.slice(0), 320).then(function(dataUrl){
+      el.beforeThumbImg.src = dataUrl;
+      el.beforeThumbBlock.hidden = false;
+    }).catch(function(){ /* non-fatal preview failure */ });
+  }
+
+  function renderThumbnailDataUrl(bytes, cssWidth){
+    return pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise.then(function(doc){
+      return doc.getPage(1);
+    }).then(function(page){
+      var base = page.getViewport({ scale: 1 });
+      var dpr = window.devicePixelRatio || 1;
+      var scale = (cssWidth * dpr) / base.width;
+      var viewport = page.getViewport({ scale: scale });
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      canvas.style.width = cssWidth + "px";
+      canvas.style.height = (viewport.height / dpr) + "px";
+      var ctx = canvas.getContext("2d");
+      return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
+        var url = canvas.toDataURL("image/jpeg", 0.85);
+        canvas.width = 0; canvas.height = 0;
+        return url;
+      });
+    });
+  }
+
+  /* ---------- build settings ---------- */
+
+  el.dpiGroup.addEventListener("click", function(e){
+    var btn = e.target.closest(".pill");
+    if (!btn) return;
+    state.dpi = parseInt(btn.dataset.dpi, 10);
+    Array.prototype.forEach.call(el.dpiGroup.children, function(c){ c.classList.toggle("active", c === btn); });
+  });
+
+  el.formatGroup.addEventListener("click", function(e){
+    var btn = e.target.closest(".pill");
+    if (!btn) return;
+    state.format = btn.dataset.format;
+    Array.prototype.forEach.call(el.formatGroup.children, function(c){ c.classList.toggle("active", c === btn); });
+    el.qualityRow.hidden = state.format !== "jpeg";
+  });
+
+  el.qualityRange.addEventListener("input", function(){
+    state.jpegQuality = parseInt(el.qualityRange.value, 10);
+    el.qualityVal.textContent = state.jpegQuality;
+  });
+
+  /* ---------- build ---------- */
+
+  el.btnBuild.addEventListener("click", startBuild);
+
+  function startBuild(){
+    el.btnBuild.disabled = true;
+    el.btnBuild.textContent = "重建中…";
+    el.progressWrap.hidden = false;
+    updateProgress(0, state.pageCount || 1, "準備中…");
+
+    var outDoc, jsDoc;
+
+    pdfjsLib.getDocument({ data: new Uint8Array(state.originalBytes.slice(0)) }).promise.then(function(doc){
+      jsDoc = doc;
+      return PDFLib.PDFDocument.create();
+    }).then(function(created){
+      outDoc = created;
+      var n = jsDoc.numPages;
+      var chain = Promise.resolve();
+      var i = 1;
+      function next(){
+        if (i > n) return Promise.resolve();
+        return renderPageInto(jsDoc, outDoc, i, state.dpi, state.format, state.jpegQuality).then(function(){
+          updateProgress(i, n, "重建中…");
+          i++;
+          return new Promise(function(r){ setTimeout(r, 0); }).then(next);
+        });
+      }
+      return next();
+    }).then(function(){
+      return outDoc.save();
+    }).then(function(bytes){
+      state.outputBytes = bytes;
+      updateProgress(1, 1, "完成");
+      return renderThumbnailDataUrl(bytes.slice(0).buffer, 260);
+    }).then(function(afterUrl){
+      return renderThumbnailDataUrl(state.originalBytes.slice(0), 260).then(function(beforeUrl){
+        showResult(beforeUrl, afterUrl);
+      });
+    }).catch(function(err){
+      console.error(err);
+      showToast("重建失敗:" + (err && err.message ? err.message : "未知錯誤"));
+    }).finally(function(){
+      el.btnBuild.disabled = false;
+      el.btnBuild.textContent = "開始重建";
+    });
+  }
+
+  function renderPageInto(jsDoc, outDoc, pageNum, dpi, format, jpegQuality){
+    return jsDoc.getPage(pageNum).then(function(page){
+      var unscaled = page.getViewport({ scale: 1 });
+      var scale = dpi / 72;
+      var viewport = page.getViewport({ scale: scale });
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      var ctx = canvas.getContext("2d", { alpha: false });
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
+        var mime = format === "jpeg" ? "image/jpeg" : "image/png";
+        var quality = format === "jpeg" ? jpegQuality / 100 : undefined;
+        return new Promise(function(resolve){ canvas.toBlob(resolve, mime, quality); });
+      }).then(function(blob){
+        return blob.arrayBuffer();
+      }).then(function(buf){
+        var bytes = new Uint8Array(buf);
+        canvas.width = 0; canvas.height = 0;
+        return format === "jpeg" ? outDoc.embedJpg(bytes) : outDoc.embedPng(bytes);
+      }).then(function(img){
+        var outPage = outDoc.addPage([unscaled.width, unscaled.height]);
+        outPage.drawImage(img, { x: 0, y: 0, width: unscaled.width, height: unscaled.height });
+      });
+    });
+  }
+
+  function updateProgress(i, n, label){
+    var pct = n > 0 ? Math.round((i / n) * 100) : 0;
+    el.progressFill.style.width = pct + "%";
+    el.progressPct.textContent = pct + "%";
+    el.progressLabel.textContent = label + (n > 1 ? "第 " + i + " / " + n + " 頁" : "");
+  }
+
+  function showResult(beforeUrl, afterUrl){
+    el.rsBefore.textContent = formatBytes(state.originalSize);
+    el.rsAfter.textContent = formatBytes(state.outputBytes.byteLength);
+    var delta = state.outputBytes.byteLength - state.originalSize;
+    var pct = state.originalSize ? Math.abs(Math.round((delta / state.originalSize) * 100)) : 0;
+    if (delta <= 0) {
+      el.rsDelta.innerHTML = "檔案縮小了 <strong>" + pct + "%</strong>。";
+    } else {
+      el.rsDelta.innerHTML = "檔案變大了 <strong>" + pct + "%</strong>——點陣圖通常比向量字型佔空間,可嘗試調低解析度或改用 JPEG 以縮小檔案。";
+    }
+    el.afterThumbBefore.src = beforeUrl;
+    el.afterThumbAfter.src = afterUrl;
+    el.cardResult.hidden = false;
+    el.cardResult.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /* ---------- download ---------- */
+
+  el.btnDownload.addEventListener("click", function(){
+    var use = window.claude && window.claude.use;
+    if (!use) { showToast("此檢視環境不支援檔案下載"); return; }
+    window.claude.use("downloads").then(function(downloads){
+      if (!downloads) { showToast("此檢視環境不支援檔案下載"); return; }
+      var base = (state.fileName || "document").replace(/\.pdf$/i, "");
+      var filename = base + "_點陣重建.pdf";
+      var blob = new Blob([state.outputBytes], { type: "application/pdf" });
+      return downloads.save({ filename: filename, data: blob }).then(function(res){
+        showToast(res.status === "saved" ? "已儲存" : "已送出");
+      });
+    }).catch(function(err){
+      if (err && err.code === "declined") return;
+      showToast("下載失敗:" + (err && err.message ? err.message : "未知錯誤"));
+    });
+  });
+
+})();
+</script>
