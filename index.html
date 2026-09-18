@@ -790,7 +790,7 @@ import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.3.289
 
   el.btnDownload.addEventListener("click", function(){
     var base = (state.fileName || "document").replace(/\.pdf$/i, "");
-    var filename = base + "_點陣重建.pdf";
+    var filename = base + "_重建版.pdf";
     var blob = new Blob([state.outputBytes], { type: "application/pdf" });
 
     var use = window.claude && window.claude.use;
